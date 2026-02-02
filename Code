@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Map Quiz</title>
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    #map {
+      height: 100%;
+      width: 100%;
+      z-index: 1;
+    }
+
+    /* Question overlay */
+    #ui {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 12px 18px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      z-index: 1000;
+      text-align: center;
+    }
+
+    #question {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    #message {
+      margin-top: 6px;
+    }
+
+    button {
+      margin-top: 8px;
+      padding: 6px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Map goes first -->
+<div id="map"></div>
+
+<!-- Quiz UI overlay -->
+<div id="ui">
+  <div id="question">Loading...</div>
+  <div id="message"></div>
+  <button id="checkBtn">Check Answer</button>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  // QUESTIONS
+  const questions = [
+    {
+      question: "Click on France",
+      lat: 46.2276,
+      lng: 2.2137,
+      radius: 550000
+    },
+    {
+      question: "Click on Brazil",
+      lat: -14.2350,
+      lng: -51.9253,
+      radius: 1500000
+    },
+    {
+      question: "Click on Japan",
+      lat: 36.2048,
+      lng: 138.2529,
+      radius: 400000
+    }
+  ];
+
+  let currentQuestion = 0;
+  let marker = null;
+  let selectedLatLng = null;
+  let lockedUntil = 0;
+
+  // MAP SETUP (English labels)
+  const map = L.map('map', {
+    zoomControl: true
+  }).setView([20, 0], 2);
+
+  L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    {
+      attribution: '© OpenStreetMap © CARTO',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }
+  ).addTo(map);
+
+  // CLICK TO PLACE PIN
+  map.on('click', function (e) {
+    if (marker) map.removeLayer(marker);
+    marker = L.marker(e.latlng).addTo(map);
+    selectedLatLng = e.latlng;
+  });
+
+  // LOAD QUESTION
+  function loadQuestion() {
+    document.getElementById("question").textContent =
+      questions[currentQuestion].question;
+    document.getElementById("message").textContent = "";
+    if (marker) map.removeLayer(marker);
+    marker = null;
+    selectedLatLng = null;
+  }
+
+  loadQuestion();
+
+  // CHECK ANSWER
+  document.getElementById("checkBtn").addEventListener("click", () => {
+    const now = Date.now();
+    if (now < lockedUntil) {
+      alert("You must wait before trying again!");
+      return;
+    }
+
+    if (!selectedLatLng) {
+      alert("Place a pin first!");
+      return;
+    }
+
+    const correct = questions[currentQuestion];
+
+    const distance = map.distance(
+      [correct.lat, correct.lng],
+      [selectedLatLng.lat, selectedLatLng.lng]
+    );
+
+    if (distance <= correct.radius) {
+      document.getElementById("message").textContent = "✅ Correct!";
+      currentQuestion++;
+
+      if (currentQuestion < questions.length) {
+        setTimeout(loadQuestion, 1500);
+      } else {
+        document.getElementById("question").textContent = "🎉 All done!";
+        document.getElementById("message").textContent = "";
+      }
+    } else {
+      document.getElementById("message").textContent =
+        "❌ Wrong! Wait 5 minutes.";
+      lockedUntil = Date.now() + 5 * 60 * 1000;
+    }
+  });
+</script>
+
+</body>
+</html>
