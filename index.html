@@ -243,14 +243,14 @@
     zoomControl: true
   }).setView([20, 0], 2);
 
-L.tileLayer(
-  'https://{s}.basemaps.cartocdn.com/light_all/%7Bz%7D/%7Bx%7D/%7By%7D%7Br%7D.png',
-  {
-    attribution: '© OpenStreetMap © CARTO',
-    subdomains: 'abcd',
-    maxZoom: 19
-  }
-).addTo(map);
+ L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    {
+      attribution: '© OpenStreetMap © CARTO',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }
+  ).addTo(map);
 
   // CLICK TO PLACE PIN
   map.on('click', function (e) {
@@ -311,6 +311,7 @@ L.tileLayer(
 
 </body>
 </html>
+
 
 
 
